@@ -13,6 +13,167 @@ A comprehensive travel booking chatbot that provides a seamless booking experien
 - Local attraction suggestions
 - Complete itinerary management
 
+## Technical Architecture
+
+```mermaid
+graph TB
+    subgraph "Client Layer"
+        UI[Web Interface]
+        Mobile[Mobile App]
+        Bot[Bot Interface]
+    end
+
+    subgraph "API Gateway"
+        APIG[API Gateway]
+        Auth[Auth Middleware]
+        RateLimit[Rate Limiter]
+    end
+
+    subgraph "Application Layer"
+        BotService[Bot Service]
+        ConvService[Conversation Service]
+        VectorStore[Vector Store Service]
+    end
+
+    subgraph "Business Services"
+        NorseService[Norse Airways Service]
+        HotelService[Hotel Service]
+        TransService[Transportation Service]
+        RestService[Restaurant Service]
+        AttrService[Attraction Service]
+    end
+
+    subgraph "Data Layer"
+        CosmosDB[(Cosmos DB)]
+        Search[Azure Cognitive Search]
+        KeyVault[(Azure Key Vault)]
+    end
+
+    subgraph "External Services"
+        NorseAPI[Norse Atlantic API]
+        HotelAPI[Hotel APIs]
+        TripAPI[TripAdvisor API]
+        RestAPI[Restaurant APIs]
+        OpenAI[Azure OpenAI]
+        B2C[Azure AD B2C]
+    end
+
+    %% Client Layer Connections
+    UI --> APIG
+    Mobile --> APIG
+    Bot --> APIG
+
+    %% API Gateway Connections
+    APIG --> Auth
+    Auth --> RateLimit
+    RateLimit --> BotService
+    RateLimit --> ConvService
+
+    %% Application Layer Connections
+    BotService --> ConvService
+    ConvService --> VectorStore
+    ConvService --> NorseService
+    ConvService --> HotelService
+    ConvService --> TransService
+    ConvService --> RestService
+    ConvService --> AttrService
+
+    %% Business Services Connections
+    NorseService --> NorseAPI
+    HotelService --> HotelAPI
+    AttrService --> TripAPI
+    RestService --> RestAPI
+
+    %% Data Layer Connections
+    BotService --> CosmosDB
+    ConvService --> CosmosDB
+    VectorStore --> Search
+    VectorStore --> OpenAI
+    NorseService --> KeyVault
+    HotelService --> KeyVault
+    TransService --> KeyVault
+    RestService --> KeyVault
+    AttrService --> KeyVault
+
+    %% Authentication Flow
+    Auth --> B2C
+    B2C --> NorseAPI
+
+    classDef azure fill:#0072C6,stroke:#333,stroke-width:2px,color:white;
+    classDef service fill:#2B579A,stroke:#333,stroke-width:2px,color:white;
+    classDef database fill:#217346,stroke:#333,stroke-width:2px,color:white;
+    classDef external fill:#FFB900,stroke:#333,stroke-width:2px,color:black;
+
+    class APIG,Auth,RateLimit,BotService,ConvService,VectorStore azure;
+    class NorseService,HotelService,TransService,RestService,AttrService service;
+    class CosmosDB,Search,KeyVault database;
+    class NorseAPI,HotelAPI,TripAPI,RestAPI,OpenAI,B2C external;
+```
+
+### Architecture Components
+
+#### Client Layer
+- **Web Interface**: React-based web application
+- **Mobile App**: Native mobile applications
+- **Bot Interface**: Bot Framework channels integration
+
+#### API Gateway
+- **API Gateway**: Request routing and load balancing
+- **Auth Middleware**: JWT validation and Norse Atlantic account integration
+- **Rate Limiter**: Request throttling and DDoS protection
+
+#### Application Layer
+- **Bot Service**: Handles bot interactions and message processing
+- **Conversation Service**: Manages conversation state and flow
+- **Vector Store Service**: Handles support content search and retrieval
+
+#### Business Services
+- **Norse Airways Service**: Flight booking and management
+- **Hotel Service**: Hotel search and booking
+- **Transportation Service**: Ground transportation booking
+- **Restaurant Service**: Restaurant reservations
+- **Attraction Service**: Local activities and attractions
+
+#### Data Layer
+- **Cosmos DB**: User data, conversation state, and bookings
+- **Azure Cognitive Search**: Vector search for support content
+- **Azure Key Vault**: Secure credential management
+
+#### External Services
+- **Norse Atlantic API**: Flight booking and management
+- **Hotel APIs**: Property search and booking
+- **TripAdvisor API**: Attraction information
+- **Restaurant APIs**: Dining reservations
+- **Azure OpenAI**: Natural language processing
+- **Azure AD B2C**: Norse Atlantic account authentication
+
+### Data Flow
+
+1. **Authentication Flow**
+   - User authenticates via Norse Atlantic account
+   - B2C validates credentials and issues JWT
+   - Token used for subsequent API calls
+
+2. **Conversation Flow**
+   - User message received by Bot Service
+   - Conversation Service processes message
+   - Vector Store Service searches for relevant content
+   - Response generated using OpenAI
+   - State updated in Cosmos DB
+
+3. **Booking Flow**
+   - User initiates booking request
+   - Relevant service (Norse, Hotel, etc.) processes request
+   - External API called for availability
+   - Booking confirmed and stored in Cosmos DB
+   - Confirmation sent to user
+
+4. **Support Content Flow**
+   - User query received
+   - Vector Store Service generates embedding
+   - Azure Cognitive Search finds relevant content
+   - Content used to enhance response
+
 ## Architecture
 
 The solution is built using Azure services and OpenAI:
